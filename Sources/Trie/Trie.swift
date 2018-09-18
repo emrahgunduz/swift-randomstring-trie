@@ -52,7 +52,7 @@ public class Trie {
     current.isEnd = true
   }
 
-  public func wordExists (word: String) -> TWord {
+  public func wordExists (word: String) -> Bool {
     guard let node = prefixNode(prefix: word) else {
       return false
     }
