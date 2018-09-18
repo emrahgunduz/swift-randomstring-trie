@@ -55,6 +55,22 @@ public class Trie {
     }
   }
 
+  public func exists (element: String) -> Bool {
+    var exists = false
+    queue.sync {
+      guard let node = prefixNode(prefix: element) else {
+        return
+      }
+
+      guard node.isEnd == true else {
+        return
+      }
+
+      exists = true
+    }
+    return exists
+  }
+
   public func exists (element: String, _ body: (Bool) -> Void) -> Void {
     queue.sync {
       guard let node = prefixNode(prefix: element) else {
