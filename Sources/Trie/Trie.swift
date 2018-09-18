@@ -7,8 +7,8 @@ import Glibc
 import Foundation
 
 fileprivate class Node {
-  public var isEnd:       Bool = false
-  public var children:    [Character: Node]
+  public var isEnd:    Bool = false
+  public var children: [Character: Node]
 
   public init (isEnd: Bool) {
     self.isEnd = isEnd
@@ -17,6 +17,7 @@ fileprivate class Node {
 }
 
 public class Trie {
+  private let queue = DispatchQueue(label: "com.markakod.Trie", attributes: .concurrent)
   private let root: Node
 
   public init () {
@@ -38,29 +39,33 @@ public class Trie {
   }
 
   public func insert (word: String) -> Void {
-    var current: Node = self.root;
+    queue.async(flags: .barries) {
+      var current: Node = self.root;
 
-    for letter: Character in word {
-      let next: Node? = current.children[letter]
-      if (next == nil) {
-        current.children[letter] = Node(isEnd: false)
+      for letter: Character in word {
+        let next: Node? = current.children[letter]
+        if (next == nil) {
+          current.children[letter] = Node(isEnd: false)
+        }
+
+        current = current.children[letter]!
       }
 
-      current = current.children[letter]!
+      current.isEnd = true
     }
-
-    current.isEnd = true
   }
 
-  public func wordExists (word: String) -> Bool {
-    guard let node = prefixNode(prefix: word) else {
-      return false
-    }
+  public func wordExists (word: String, body: (Bool)) -> Bool {
+    queue.sync {
+      guard let node = prefixNode(prefix: word) else {
+        body(false)
+      }
 
-    guard node.isEnd == true else {
-      return false
-    }
+      guard node.isEnd == true else {
+        body(false)
+      }
 
-    return true
+      body(true)
+    }
   }
 }
