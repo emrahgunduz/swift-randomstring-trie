@@ -9,18 +9,11 @@ import Foundation
 fileprivate class Node {
   public var isEnd:       Bool = false
   public var children:    [Character: Node]
-  public var description: String?
 
   public init (isEnd: Bool) {
     self.isEnd = isEnd
     self.children = [:]
   }
-}
-
-public struct TWord {
-  public var exists:      Bool
-  public var word:        String
-  public var description: String
 }
 
 public class Trie {
@@ -44,7 +37,7 @@ public class Trie {
     return current
   }
 
-  public func insert (word: String, description: String) -> Void {
+  public func insert (word: String) -> Void {
     var current: Node = self.root;
 
     for letter: Character in word {
@@ -57,23 +50,17 @@ public class Trie {
     }
 
     current.isEnd = true
-    current.description = description
   }
 
   public func wordExists (word: String) -> TWord {
     guard let node = prefixNode(prefix: word) else {
-      return TWord(exists: false, word: word, description: "")
+      return false
     }
 
     guard node.isEnd == true else {
-      return TWord(exists: false, word: word, description: "")
+      return false
     }
 
-    return TWord(exists: true, word: word, description: node.description ?? "")
-  }
-
-  public func wordWithPrefixExists (prefix: String) -> Bool {
-    let node: Node? = prefixNode(prefix: prefix)
-    return (node != nil)
+    return true
   }
 }
