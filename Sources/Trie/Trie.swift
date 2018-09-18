@@ -39,7 +39,7 @@ public class Trie {
   }
 
   public func insert (word: String) -> Void {
-    queue.async(flags: .barries) {
+    queue.async(flags: .barrier) {
       var current: Node = self.root;
 
       for letter: Character in word {
@@ -55,14 +55,16 @@ public class Trie {
     }
   }
 
-  public func wordExists (word: String, body: (Bool)) -> Bool {
+  public func wordExists (word: String, body: (Bool) -> Void) -> Void {
     queue.sync {
       guard let node = prefixNode(prefix: word) else {
         body(false)
+        return
       }
 
       guard node.isEnd == true else {
         body(false)
+        return
       }
 
       body(true)
