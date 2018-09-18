@@ -55,7 +55,7 @@ public class Trie {
     }
   }
 
-  public func exists (element: String, body: (Bool) -> Void) -> Void {
+  public func exists (element: String, _ body: (Bool) -> Void) -> Void {
     queue.sync {
       guard let node = prefixNode(prefix: element) else {
         body(false)
