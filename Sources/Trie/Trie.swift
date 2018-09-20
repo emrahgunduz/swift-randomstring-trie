@@ -53,7 +53,9 @@ public class Trie {
       current = current!.parent
     }
 
-    return item
+    let reversed = item.reversed() as [Character]
+    
+    return reversed.map { String(describing: $0) }.joined()
   }
 
   public func insert (element: String) -> Void {
