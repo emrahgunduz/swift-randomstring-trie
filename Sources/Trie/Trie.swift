@@ -6,23 +6,24 @@ import Glibc
 
 import Foundation
 
-fileprivate class Node<Key: Hashable> {
-  public var parent: Node?
+fileprivate class TNode<Key: Hashable> {
+  public var parent: TNode?
   public var key:    Key?
   public var isEnd:  Bool = false
 
-  public var children: [Key: Node] = [:]
+  public var children: [Key: TNode] = [:]
 
-  public init (key: Key?, parent: Node?) {
+  public init (key: Key?, parent: TNode?) {
     self.key = key
     self.parent = parent
-    self.children = children
   }
 }
 
-public class Trie {
-  private let queue      = DispatchQueue(label: "com.markakod.Trie", attributes: .concurrent)
-  private let root: Node = Node(key: nil, parent: nil)
+public class Trie<CollectionType: Collection> where CollectionType.Element: Hashable {
+  private typealias Node = TNode<CollectionType.Element>
+
+  private let queue = DispatchQueue(label: "com.markakod.Trie", attributes: .concurrent)
+  private let root  = Node(key: nil, parent: nil)
 
   public init () {}
 
@@ -31,7 +32,7 @@ public class Trie {
       var current = self.root;
 
       for elem in collection {
-        if (current.children[elem] == nil) { current.children[elem] = Node(parent: current, key: elem) }
+        if (current.children[elem] == nil) { current.children[elem] = Node(key: elem, parent: current) }
         current = current.children[elem]!
       }
 
@@ -71,9 +72,9 @@ public class Trie {
     }
   }
 
-  public func contents (_ body: (String) -> Void) {
+  public func contents (_ body: (CollectionType) -> Void) {
     queue.sync { [weak self] in
-      loop(from: self!.root, body: body)
+      self!.loop(from: self!.root, body: body)
     }
   }
 
@@ -85,34 +86,32 @@ public class Trie {
     return all
   }
 
-}
-
-fileprivate extension Trie {
-  fileprivate func traverse (from: Node) -> [Key] {
-    var current: Node? = from
-    var item:    [Key] = []
+  private func traverse (from: Node) -> CollectionType {
+    var current: Node?                    = from
+    var item:    [CollectionType.Element] = []
 
     while (current != nil) {
       if (current!.key == nil) { break }
-      item.append(current?.key)
+      let key = current?.key
+      item.append(key!)
       current = current!.parent
     }
 
     let reversed = item.reversed()
-    return reversed
+    return reversed as! CollectionType
   }
 
-  fileprivate func loop (from: Node, body: (String) -> Void) {
+  private func loop (from: Node, body: (CollectionType) -> Void) {
     for (_, child) in from.children {
       if (child.isEnd) {
-        body(self.traverse(from: child))
+        body(traverse(from: child))
       }
 
       self.loop(from: child, body: body)
     }
   }
 
-  fileprivate func loopSimple (from: Node, body: () -> Void) {
+  private func loopSimple (from: Node, body: () -> Void) {
     for (_, child) in from.children {
       if (child.isEnd) { body() }
 
@@ -120,7 +119,7 @@ fileprivate extension Trie {
     }
   }
 
-  fileprivate func prefixNode (prefix: CollectionType) -> Node? {
+  private func prefixNode (prefix: CollectionType) -> Node? {
     var current: Node = self.root;
 
     for elem in prefix {
