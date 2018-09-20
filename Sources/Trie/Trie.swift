@@ -6,49 +6,43 @@ import Glibc
 
 import Foundation
 
-fileprivate class Node {
-  public var parent:    Node?
-  public var character: Character?
-  public var children:  [Character: Node]
-  public var isEnd:     Bool = false
+fileprivate class Node<Key: Hashable> {
+  public var parent: Node?
+  public var key:    Key?
+  public var isEnd:  Bool = false
 
-  public init (parent: Node?, character: Character?, children: [Character: Node], isEnd: Bool) {
+  public var children: [Key: Node] = [:]
+
+  public init (key: Key?, parent: Node?) {
+    self.key = key
     self.parent = parent
-    self.character = character
     self.children = children
-    self.isEnd = isEnd
   }
 }
 
 public class Trie {
-  private let queue = DispatchQueue(label: "com.markakod.Trie", attributes: .concurrent)
-  private let root: Node
+  private let queue      = DispatchQueue(label: "com.markakod.Trie", attributes: .concurrent)
+  private let root: Node = Node(key: nil, parent: nil)
 
-  public init () {
-    self.root = Node(parent: nil, character: nil, children: [:], isEnd: false)
-  }
+  public init () {}
 
-  public func insert (element: String) -> Void {
+  public func insert (collection: CollectionType) -> Void {
     queue.async(flags: .barrier) {
-      var current: Node = self.root;
+      var current = self.root;
 
-      for letter: Character in element {
-        let next: Node? = current.children[letter]
-        if (next == nil) {
-          current.children[letter] = Node(parent: current, character: letter, children: [:], isEnd: false)
-        }
-
-        current = current.children[letter]!
+      for elem in collection {
+        if (current.children[elem] == nil) { current.children[elem] = Node(parent: current, key: elem) }
+        current = current.children[elem]!
       }
 
       current.isEnd = true
     }
   }
 
-  public func exists (element: String) -> Bool {
+  public func exists (collection: CollectionType) -> Bool {
     var exists = false
     queue.sync {
-      guard let node = prefixNode(prefix: element) else {
+      guard let node = prefixNode(prefix: collection) else {
         return
       }
 
@@ -61,9 +55,9 @@ public class Trie {
     return exists
   }
 
-  public func exists (element: String, _ body: (Bool) -> Void) -> Void {
+  public func exists (collection: CollectionType, _ body: (Bool) -> Void) -> Void {
     queue.sync {
-      guard let node = prefixNode(prefix: element) else {
+      guard let node = prefixNode(prefix: collection) else {
         body(false)
         return
       }
@@ -86,9 +80,7 @@ public class Trie {
   public func count () -> UInt {
     var all: UInt = 0
     queue.sync { [weak self] in
-      self!.loopSimple(from: self!.root) {
-        all += 1
-      }
+      self!.loopSimple(from: self!.root) { all += 1 }
     }
     return all
   }
@@ -96,33 +88,18 @@ public class Trie {
 }
 
 fileprivate extension Trie {
-  fileprivate func prefixNode (prefix: String) -> Node? {
-    var current: Node = self.root;
-
-    for letter: Character in prefix {
-      let next: Node? = current.children[letter]
-      if (next == nil) {
-        return nil
-      }
-      current = next!
-    }
-
-    return current
-  }
-
-  fileprivate func traverse (from: Node) -> String {
-    var current: Node?  = from
-    var item:    String = ""
+  fileprivate func traverse (from: Node) -> [Key] {
+    var current: Node? = from
+    var item:    [Key] = []
 
     while (current != nil) {
-      if (current!.character == nil) { break }
-      item = item + String(current!.character!)
+      if (current!.key == nil) { break }
+      item.append(current?.key)
       current = current!.parent
     }
 
-    let reversed = item.reversed() as [Character]
-
-    return reversed.map { String(describing: $0) }.joined()
+    let reversed = item.reversed()
+    return reversed
   }
 
   fileprivate func loop (from: Node, body: (String) -> Void) {
@@ -137,11 +114,21 @@ fileprivate extension Trie {
 
   fileprivate func loopSimple (from: Node, body: () -> Void) {
     for (_, child) in from.children {
-      if (child.isEnd) {
-        body()
-      }
+      if (child.isEnd) { body() }
 
       self.loopSimple(from: child, body: body)
     }
   }
+
+  fileprivate func prefixNode (prefix: CollectionType) -> Node? {
+    var current: Node = self.root;
+
+    for elem in prefix {
+      if (current.children[elem] == nil) { return nil }
+      current = current.children[elem]!
+    }
+
+    return current
+  }
+
 }
