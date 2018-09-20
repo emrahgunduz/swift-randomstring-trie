@@ -113,7 +113,7 @@ public class Trie {
         body(self.traverse(from: child))
       }
 
-      loop(from: child, body: body)
+      self.loop(from: child, body: body)
     }
   }
 
@@ -123,20 +123,20 @@ public class Trie {
         body()
       }
 
-      loopSimple(from: child, body: body)
+      self.loopSimple(from: child, body: body)
     }
   }
 
   public func contents (_ body: (String) -> Void) {
-    queue.sync {
-      loop(from: self.root, body: body)
+    queue.sync { [weak self] in
+      loop(from: self!.root, body: body)
     }
   }
 
   public func count () -> UInt {
     var all: UInt = 0
-    queue.sync {
-      loopSimple(from: self.root) {
+    queue.sync { [weak self] in
+      self!.loopSimple(from: self!.root) {
         all += 1
       }
     }
