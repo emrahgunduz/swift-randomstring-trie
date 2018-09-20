@@ -54,7 +54,7 @@ public class Trie {
     }
 
     let reversed = item.reversed() as [Character]
-    
+
     return reversed.map { String(describing: $0) }.joined()
   }
 
@@ -117,9 +117,29 @@ public class Trie {
     }
   }
 
+  private func loopSimple (from: Node) {
+    for (_, child) in from.children {
+      if (child.isEnd) {
+        body()
+      }
+
+      loop(from: child, body: body)
+    }
+  }
+
   public func contents (_ body: (String) -> Void) {
     queue.sync {
       loop(from: self.root, body: body)
     }
+  }
+
+  public func count () -> UInt {
+    var all: UInt = 0
+    queue.sync {
+      loopSimple(from: self.root) {
+        all += 1
+      }
+    }
+    return all
   }
 }
