@@ -48,6 +48,7 @@ public class Trie {
     var item:    String = ""
 
     while (current != nil) {
+      if (current!.character == nil) { break }
       item = item + String(current!.character!)
       current = current!.parent
     }
