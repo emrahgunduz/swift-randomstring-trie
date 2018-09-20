@@ -43,18 +43,16 @@ public class Trie {
     return current
   }
 
-  private func traverse (from: Node) -> String? {
-    var current = from
-    guard var element = String(from.character!) else {
-      return nil
+  private func traverse (from: Node) -> String {
+    var current: Node?  = from
+    var item:    String = ""
+
+    while (current != nil) {
+      item = item + String(current!.character!)
+      current = current!.parent
     }
 
-    while (current.parent != nil) {
-      element += current.character
-      var parent = current.parent
-    }
-
-    return ""
+    return item
   }
 
   private func findEnd (from: Node) -> Node? {
