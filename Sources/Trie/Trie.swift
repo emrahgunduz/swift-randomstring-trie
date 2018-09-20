@@ -9,11 +9,15 @@ import Foundation
 fileprivate class Node {
   public var isEnd:    Bool = false
   public var children: [Character: Node]
-  public var parent:   Node?
 
-  public init (isEnd: Bool, parent: Node? = nil) {
+  public var parent:    Node?
+  public var character: Character?
+
+  public init (isEnd: Bool, parent: Node? = nil, character: Character? = nil) {
     self.isEnd = isEnd
     self.children = [:]
+    self.parent = parent
+    self.character = character
   }
 }
 
@@ -39,7 +43,16 @@ public class Trie {
     return current
   }
 
-  private func traverse (from: Node) -> String {
+  private func traverse (from: Node) -> String? {
+    var current = from
+    guard var element = String(from.character!) else {
+      return nil
+    }
+
+    while (current.parent != nil) {
+      element += current.character
+      var parent = current.parent
+    }
 
     return ""
   }
@@ -63,7 +76,7 @@ public class Trie {
       for letter: Character in element {
         let next: Node? = current.children[letter]
         if (next == nil) {
-          current.children[letter] = Node(isEnd: false, parent: current)
+          current.children[letter] = Node(isEnd: false, parent: current, character: letter)
         }
 
         current = current.children[letter]!
