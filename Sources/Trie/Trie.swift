@@ -123,7 +123,7 @@ public class Trie {
         body()
       }
 
-      loop(from: child, body: body)
+      loopSimple(from: child, body: body)
     }
   }
 
