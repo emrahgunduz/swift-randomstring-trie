@@ -117,6 +117,12 @@ public class Trie {
     }
   }
 
+  public func contents (_ body: (String) -> Void) {
+    queue.sync { [weak self] in
+      loop(from: self!.root, body: body)
+    }
+  }
+
   private func loopSimple (from: Node, body: () -> Void) {
     for (_, child) in from.children {
       if (child.isEnd) {
@@ -124,12 +130,6 @@ public class Trie {
       }
 
       self.loopSimple(from: child, body: body)
-    }
-  }
-
-  public func contents (_ body: (String) -> Void) {
-    queue.sync { [weak self] in
-      loop(from: self!.root, body: body)
     }
   }
 
