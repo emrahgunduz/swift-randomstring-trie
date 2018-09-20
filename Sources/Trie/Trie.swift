@@ -117,7 +117,7 @@ public class Trie {
     }
   }
 
-  private func loopSimple (from: Node) {
+  private func loopSimple (from: Node, body: () -> Void) {
     for (_, child) in from.children {
       if (child.isEnd) {
         body()
