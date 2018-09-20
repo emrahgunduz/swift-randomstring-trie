@@ -56,18 +56,6 @@ public class Trie {
     return item
   }
 
-  private func findEnd (from: Node) -> Node? {
-    for (_, child) in from.children {
-      if (child.isEnd) {
-        return child
-      } else {
-        return self.findEnd(from: child)
-      }
-    }
-
-    return nil
-  }
-
   public func insert (element: String) -> Void {
     queue.async(flags: .barrier) {
       var current: Node = self.root;
@@ -117,22 +105,19 @@ public class Trie {
     }
   }
 
+  private func loop (from: Node, body: (String) -> Void) {
+    for (_, child) in from.children {
+      if (child.isEnd) {
+        body(self.traverse(from: child))
+      }
+
+      loop(from: child, body: body)
+    }
+  }
+
   public func contents (_ body: (String) -> Void) {
     queue.sync {
-      let current: Node = self.root;
-
-      for (_, child) in current.children {
-        if (child.isEnd) {
-          body(self.traverse(from: child))
-          return
-        }
-
-        guard let onEnd = self.findEnd(from: child) else {
-          return
-        }
-
-        body(self.traverse(from: onEnd))
-      }
+      loop(from: self.root, body: body)
     }
   }
 }
