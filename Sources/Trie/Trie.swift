@@ -6,24 +6,23 @@ import Glibc
 
 import Foundation
 
-fileprivate class TNode<Key: Hashable> {
-  public var parent: TNode?
+fileprivate class Node<Key: Hashable> {
+  public var parent: Node?
   public var key:    Key?
   public var isEnd:  Bool = false
 
-  public var children: [Key: TNode] = [:]
+  public var children: [Key: Node] = [:]
 
-  public init (key: Key?, parent: TNode?) {
+  public init (key: Key?, parent: Node?) {
     self.key = key
     self.parent = parent
+    self.children = children
   }
 }
 
-public class Trie<CollectionType: Collection> where CollectionType.Element: Hashable {
-  private typealias Node = TNode<CollectionType.Element>
-
-  private let queue = DispatchQueue(label: "com.markakod.Trie", attributes: .concurrent)
-  private let root  = Node(key: nil, parent: nil)
+public class Trie {
+  private let queue      = DispatchQueue(label: "com.markakod.Trie", attributes: .concurrent)
+  private let root: Node = Node(key: nil, parent: nil)
 
   public init () {}
 
@@ -32,7 +31,7 @@ public class Trie<CollectionType: Collection> where CollectionType.Element: Hash
       var current = self.root;
 
       for elem in collection {
-        if (current.children[elem] == nil) { current.children[elem] = Node(key: elem, parent: current) }
+        if (current.children[elem] == nil) { current.children[elem] = Node(parent: current, key: elem) }
         current = current.children[elem]!
       }
 
@@ -72,9 +71,9 @@ public class Trie<CollectionType: Collection> where CollectionType.Element: Hash
     }
   }
 
-  public func contents (_ body: (CollectionType) -> Void) {
+  public func contents (_ body: (String) -> Void) {
     queue.sync { [weak self] in
-      self!.loop(from: self!.root, body: body)
+      loop(from: self!.root, body: body)
     }
   }
 
@@ -86,32 +85,34 @@ public class Trie<CollectionType: Collection> where CollectionType.Element: Hash
     return all
   }
 
-  private func traverse (from: Node) -> CollectionType {
-    var current: Node?                    = from
-    var item:    [CollectionType.Element] = []
+}
+
+fileprivate extension Trie {
+  fileprivate func traverse (from: Node) -> [Key] {
+    var current: Node? = from
+    var item:    [Key] = []
 
     while (current != nil) {
       if (current!.key == nil) { break }
-      let key = current?.key
-      item.append(key!)
+      item.append(current?.key)
       current = current!.parent
     }
 
     let reversed = item.reversed()
-    return reversed as! CollectionType
+    return reversed
   }
 
-  private func loop (from: Node, body: (CollectionType) -> Void) {
+  fileprivate func loop (from: Node, body: (String) -> Void) {
     for (_, child) in from.children {
       if (child.isEnd) {
-        body(traverse(from: child))
+        body(self.traverse(from: child))
       }
 
       self.loop(from: child, body: body)
     }
   }
 
-  private func loopSimple (from: Node, body: () -> Void) {
+  fileprivate func loopSimple (from: Node, body: () -> Void) {
     for (_, child) in from.children {
       if (child.isEnd) { body() }
 
@@ -119,7 +120,7 @@ public class Trie<CollectionType: Collection> where CollectionType.Element: Hash
     }
   }
 
-  private func prefixNode (prefix: CollectionType) -> Node? {
+  fileprivate func prefixNode (prefix: CollectionType) -> Node? {
     var current: Node = self.root;
 
     for elem in prefix {
